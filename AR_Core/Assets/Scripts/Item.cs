@@ -96,7 +96,7 @@ public class Item : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.name == "Player")
+        if (other.gameObject.tag == "Player")
         {
             GamePlay.instance.SetState(GamePlay.STATE.GameOver);
         }

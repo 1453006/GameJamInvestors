@@ -40,6 +40,18 @@ public class ArCore : MonoBehaviour {
         instance = this;
     }
 
+    
+    
+    public void onReDetect()
+    {
+        state = STATE.DetectingPlane;
+        wrapupGame.SetActive(false);
+        if (feature == ARFeature.FAKE)
+        {
+            fakePlane.SetActive(true);
+        }
+    }
+
     void Start () {
         state = STATE.DetectingPlane;
         wrapupGame.SetActive(false);
@@ -117,7 +129,8 @@ public class ArCore : MonoBehaviour {
                             wrapupGame.transform.SetParent(anchor);
                             wrapupGame.transform.localPosition = Vector3.zero;
 
-                            wrapupGame.transform.localScale *= arWorldScale;
+                            //wrapupGame.transform.localScale *= arWorldScale;
+                            wrapupGame.transform.localScale = new Vector3(1, 1, 1) * arWorldScale;
                             wrapupGame.SetActive(true);
                             float scaleY = wrapupGame.transform.localScale.y;
                             Sequence sequence = DOTween.Sequence();

@@ -63,8 +63,14 @@ public class GamePlay : MonoBehaviour {
         panelResult.gameObject.GetComponent<UIElement>().Hide(false);
      }
 
-   
+
 #endregion
+
+    private void OnDisable()
+    {
+        SetState(STATE.NONE);
+        
+    }
 
     private void Awake()
     {
@@ -103,6 +109,14 @@ public class GamePlay : MonoBehaviour {
         state = st;
         switch (st)
         {
+            case STATE.NONE:
+                {
+                    txtCountDown.gameObject.SetActive(false);
+                    timer = 0;
+                    countdownTimer = countdownTime;
+                    FBPoolManager.instance.returnAllObjectsToPool();
+                    break;
+                }
             case STATE.CountDown:
                 {
                     //close effect
@@ -111,10 +125,26 @@ public class GamePlay : MonoBehaviour {
 
                     //UI
                     txtCountDown.gameObject.SetActive(true);
-
+                    txtCountDown.text = countdownTimer.ToString();
                     //panelResult.gameObject.SetActive(false);
 
-                    StartCoroutine(StartCountDown());
+                   // StartCoroutine(StartCountDown());
+
+                    //random player visual 
+                    int rand = Random.Range(0, player.transform.childCount);
+                    for(int i=0;i< player.transform.childCount;i++)
+                    {
+                        if (i == rand)
+                        {
+                            mainCharacter script = player.GetComponent<mainCharacter>();
+                            
+                            player.transform.GetChild(i).gameObject.SetActive(true);
+                            script.animator = player.GetComponentInChildren<Animator>();
+
+                        }
+                        else
+                            player.transform.GetChild(i).gameObject.SetActive(false);
+                    }
 
                     //sound 
                     SoundManager.instance.stopBgm();
@@ -132,7 +162,7 @@ public class GamePlay : MonoBehaviour {
                     panelResult.gameObject.SetActive(false);
 
                     //SHOW FULL-SCREEN CANVAS
-                    player.GetComponent<Animator>().SetBool("Death_b", false);
+                    player.GetComponentInChildren<Animator>().SetBool("Death_b", false);
                     player.transform.DOKill(true);
 
                     //sound background
@@ -143,23 +173,27 @@ public class GamePlay : MonoBehaviour {
             case STATE.GameOver:
                 {
                     //effects 
-                    
+                    //BloodSprayEffect
                     if (!bloodEfx)
-                        bloodEfx = FBPoolManager.instance.getPoolObject("BloodSprayEffect");
+                        bloodEfx = FBPoolManager.instance.getPoolObject("PlasmaExplosionEffect");
                     else
                     {
                         FBPoolManager.instance.returnObjectToPool(bloodEfx);
-                        bloodEfx = FBPoolManager.instance.getPoolObject("BloodSprayEffect");
+                        bloodEfx = FBPoolManager.instance.getPoolObject("PlasmaExplosionEffect");
                     }
-                    if (bloodEfx.transform.localScale.x > 10)
-                        bloodEfx.transform.localScale *= 0.1f;
-
-                    if (bloodEfx.transform.localScale.x > 10)
-                        bloodEfx.transform.localScale *= 0.1f;
-
-                    bloodEfx.SetActive(true);
-                    bloodEfx.transform.SetParent(player.transform);
                     bloodEfx.transform.position = player.transform.position;
+                    //if (bloodEfx.transform.localScale.x > 10)
+                    //    bloodEfx.transform.localScale *= 0.1f;
+
+                    //if (bloodEfx.transform.localScale.x > 10)
+                    //    bloodEfx.transform.localScale *= 0.1f;
+                  
+                    bloodEfx.transform.SetParent(player.transform);
+                    bloodEfx.transform.localScale = new Vector3(1, 1, 1);
+                    bloodEfx.SetActive(true);
+
+
+
                     hardness = 0;
                     //UI
                     txtScore.gameObject.SetActive(true);
@@ -174,7 +208,7 @@ public class GamePlay : MonoBehaviour {
                     txtHighScore.text = "High Score: "+highScore.ToString();
                     resultScore.text =  "Score             " + score.ToString();
 
-                    player.GetComponent<Animator>().SetBool("Death_b", true);
+                    player.GetComponentInChildren<Animator>().SetBool("Death_b", true);
                     player.transform.DOKill(true);
                     Invoke("ShowResultPanel", 1f);
 
@@ -190,6 +224,7 @@ public class GamePlay : MonoBehaviour {
     public void setDisplayScore() {
         displayScore.text= score.ToString();
         displayScore.gameObject.SetActive(true);
+
     }
 
     public IEnumerator StartCountDown()
@@ -217,6 +252,23 @@ public class GamePlay : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+        
+        if(state == STATE.CountDown)
+        {
+            timer += Time.deltaTime;
+            if(timer >= 1f)
+            {
+                countdownTimer--;
+                txtCountDown.text = countdownTimer.ToString();
+                timer = 0;
+            }
+           
+            if(countdownTimer <= 0)
+            {
+                SetState(STATE.Play);
+            }
+        }
+
         if (state != STATE.Play)
             return;
 
@@ -232,8 +284,10 @@ public class GamePlay : MonoBehaviour {
                 hardness = (hardness < MAX_HARDNESS) ? hardness+1 : MAX_HARDNESS;
             }
             txtScore.text = score.ToString();
+            
             txtScore.gameObject.GetComponent<UIElement>().Show(false);
-            setDisplayScore();
+            
+            //setDisplayScore();
             GenerateCar();
         }
 
@@ -297,7 +351,7 @@ public class GamePlay : MonoBehaviour {
         Debug.Log("route action called");
         float delay = 2f - (0.2f * hardness);
         //Random.Range(7, 7)
-        GameObject obj = FBPoolManager.instance.getPoolObject(FBPoolManager.instance.itemsToPool[Random.Range(0, 7)].name);
+        GameObject obj = FBPoolManager.instance.getPoolObject(car[Random.Range(0, car.Length)].gameObject.name);
         //if this isline visual opposite pos
         int oppositeInex = FBUtils.FindOppositeSpawnpoint(index);
         Transform opposite = listSpawnPoint[oppositeInex];

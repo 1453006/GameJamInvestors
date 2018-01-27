@@ -4,7 +4,7 @@ using UnityEngine;
 using DG.Tweening;
 public class mainCharacter : MonoBehaviour {
 
-    private Animator animator;
+    public Animator animator;
     public float rotationSpeed = 0.5f;
     public float speed = 0f;
     public static mainCharacter instance;
@@ -17,7 +17,7 @@ public class mainCharacter : MonoBehaviour {
     }
     // Use this for initialization
     void Start () {
-        animator = this.GetComponent<Animator>();
+        animator = this.GetComponentInChildren<Animator>();
 	}
 	
 	// Update is called once per frame
