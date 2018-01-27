@@ -17,7 +17,7 @@ public class ObjectPoolItem
 	public int amountToPool = 2;
 	public bool isExpandable = true;
 	public List<GameObject> pooledObjects;
-
+   
 	public void init()
 	{
 		name = objectToPool.name;
