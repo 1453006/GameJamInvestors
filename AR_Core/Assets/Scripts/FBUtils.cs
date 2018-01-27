@@ -147,4 +147,20 @@ public static class FBUtils
 	}
 
 	#endregion
+    #region inGAME
+    public static int FindOppositeSpawnpoint(int x)
+    {
+        int result = -1;
+        if((x>= 0 && x <= 5) || (x>=12 && x<= 17))
+        {
+            result = 17 - x;
+        }
+        else
+        {
+            result = 29 - x;
+        }
+
+        return result;
+    }
+    #endregion
 }

@@ -35,6 +35,7 @@ public class GamePlay : MonoBehaviour {
     public GameObject player;
     public GameObject visualClickedPoint;
     private mainCharacter playerController;
+    public List<GameObject> holders = new List<GameObject>();
     private float timer = 0f;
     public float countdownTime;
     public float countdownTimer;
@@ -225,12 +226,14 @@ public class GamePlay : MonoBehaviour {
         {
             timer = 0f;
             score++;
-            if(score % 5 == 0)
+          
+            if (score % 5 == 0)
             {
                 hardness = (hardness < MAX_HARDNESS) ? hardness+1 : MAX_HARDNESS;
             }
             txtScore.text = score.ToString();
             txtScore.gameObject.GetComponent<UIElement>().Show(false);
+            setDisplayScore();
             GenerateCar();
         }
 
@@ -279,27 +282,87 @@ public class GamePlay : MonoBehaviour {
         int rand = Random.Range(0,listCase.Count-1);
         foreach(int index in listCase[rand])
         {
-            Transform pos = listSpawnPoint[index-1];
-            StartCoroutine(routeAction(pos));
+            Transform pos = listSpawnPoint[index];
+            StartCoroutine(routeAction(pos,index));
         }
     }
 
-    IEnumerator routeAction(Transform pos)
+    void returnObjectToPool(GameObject obj)
     {
+        FBPoolManager.instance.returnObjectToPool(obj);
+    }
+    IEnumerator routeAction(Transform pos,int index)
+    {
+        bool shouldHasOpposite = false;
         Debug.Log("route action called");
-        pos.gameObject.SetActive(true);
         float delay = 2f - (0.2f * hardness);
+        //Random.Range(7, 7)
+        GameObject obj = FBPoolManager.instance.getPoolObject(FBPoolManager.instance.itemsToPool[Random.Range(0, 7)].name);
+        //if this isline visual opposite pos
+        int oppositeInex = FBUtils.FindOppositeSpawnpoint(index);
+        Transform opposite = listSpawnPoint[oppositeInex];
+        if (obj.name.Contains("line"))
+        {
+            //display
+            shouldHasOpposite = true;
+
+            GameObject holder = FBPoolManager.instance.getPoolObject(obj.name +"_holder");
+            GameObject oppositeHolder = FBPoolManager.instance.getPoolObject(obj.name + "_holder");
+            holders.Add(holder);
+            holders.Add(oppositeHolder);
+
+            holder.transform.localScale = new Vector3(1, 1, 1) * ArCore.instance.arWorldScale;
+            holder.transform.position = pos.position;
+            holder.transform.rotation = pos.rotation;
+            holder.SetActive(true);
+
+            oppositeHolder.transform.localScale = new Vector3(1, 1, 1) * ArCore.instance.arWorldScale;
+            oppositeHolder.transform.position = opposite.position;
+            oppositeHolder.transform.rotation = opposite.rotation;
+            oppositeHolder.SetActive(true);
+
+            
+            opposite.gameObject.SetActive(false);
+            pos.gameObject.SetActive(false);
+        }
+        else
+        {
+           
+     
+            pos.gameObject.SetActive(true);
+            opposite.gameObject.SetActive(false);
+        }
+
         yield return new WaitForSeconds(delay);
-        pos.gameObject.SetActive(false);
-        GameObject obj = FBPoolManager.instance.getPoolObject(FBPoolManager.instance.itemsToPool[Random.Range(0,6)].name);
-       
+
+        if (shouldHasOpposite)
+        {
+            //obj.transform.localScale = new Vector3(1, 1, 1) * ArCore.instance.arWorldScale;
+            obj.transform.localScale = new Vector3(1, 1, 1) * ArCore.instance.arWorldScale;
+            obj.transform.position = pos.position;
+            DigitalRuby.LightningBolt.LightningBoltScript lineScript = obj.GetComponent<DigitalRuby.LightningBolt.LightningBoltScript>();
+            lineScript.StartObject.transform.position = pos.position;
+            lineScript.EndObject.transform.position = opposite.position;
+            Item script = obj.addMissingComponent<Item>();
+            script.setType(Item.TYPE.LINE);
+            script.timetoReturn = 2f - (0.2f * hardness);
+            obj.SetActive(true);
+
+        }
+        else
+        {
+
         obj.transform.localScale = new Vector3(1,1,1) * ArCore.instance.arWorldScale;
         obj.transform.position = pos.position;
         obj.transform.rotation = pos.rotation;
-        obj.addMissingComponent<Item>();
+        Item script = obj.addMissingComponent<Item>();
+        script.setType(Item.TYPE.OBJECT);
         obj.SetActive(true);
-        
+
+        pos.gameObject.SetActive(false);
+        opposite.gameObject.SetActive(false);
+        }
+
     }
 
 }
-
