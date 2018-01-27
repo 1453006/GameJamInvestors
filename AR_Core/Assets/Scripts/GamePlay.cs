@@ -5,7 +5,7 @@ using DG.Tweening;
 using System.IO;
 using UnityEngine.UI;
 using GoogleARCore;
-
+using DoozyUI;
 public class Route
 {
     Transform startPoint;
@@ -42,7 +42,11 @@ public class GamePlay : MonoBehaviour {
 
     //effects :
     GameObject bloodEfx;
+
+
     #region UI
+    public Text resultScore;
+    public Text displayScore;
     public Text txtScore;
     public Transform panelResult;
     public Text txtDebug;
@@ -55,7 +59,8 @@ public class GamePlay : MonoBehaviour {
         countdownTimer = countdownTime;
         txtCountDown.text = countdownTimer.ToString();
         SetState(STATE.CountDown);
-    }
+        panelResult.gameObject.GetComponent<UIElement>().Hide(false);
+     }
 
    
 #endregion
@@ -105,7 +110,8 @@ public class GamePlay : MonoBehaviour {
 
                     //UI
                     txtCountDown.gameObject.SetActive(true);
-                    panelResult.gameObject.SetActive(false);
+
+                    //panelResult.gameObject.SetActive(false);
 
                     StartCoroutine(StartCountDown());
 
@@ -117,9 +123,11 @@ public class GamePlay : MonoBehaviour {
             case STATE.Play:
                 {                    
                     //UI
+
                     txtCountDown.gameObject.SetActive(false);
-                    txtScore.gameObject.SetActive(true);
                     txtScore.text = "0";
+                    displayScore.text = "0";
+                    txtScore.gameObject.GetComponent<UIElement>().Show(false);
                     panelResult.gameObject.SetActive(false);
 
                     //SHOW FULL-SCREEN CANVAS
@@ -163,6 +171,8 @@ public class GamePlay : MonoBehaviour {
                         PlayerPrefs.SetInt("highScore", score);
                     }
                     txtHighScore.text = "High Score: "+highScore.ToString();
+                    resultScore.text =  "Score             " + score.ToString();
+
                     player.GetComponent<Animator>().SetBool("Death_b", true);
                     player.transform.DOKill(true);
                     Invoke("ShowResultPanel", 1f);
@@ -175,6 +185,10 @@ public class GamePlay : MonoBehaviour {
                 }
         }
         
+    }
+    public void setDisplayScore() {
+        displayScore.text= score.ToString();
+        displayScore.gameObject.SetActive(true);
     }
 
     public IEnumerator StartCountDown()
@@ -197,6 +211,7 @@ public class GamePlay : MonoBehaviour {
     void ShowResultPanel()
     {
         panelResult.gameObject.SetActive(true);
+        panelResult.gameObject.GetComponent<UIElement>().Show(false);
     }
     // Update is called once per frame
     void Update()
@@ -215,6 +230,7 @@ public class GamePlay : MonoBehaviour {
                 hardness = (hardness < MAX_HARDNESS) ? hardness+1 : MAX_HARDNESS;
             }
             txtScore.text = score.ToString();
+            txtScore.gameObject.GetComponent<UIElement>().Show(false);
             GenerateCar();
         }
 
@@ -286,3 +302,4 @@ public class GamePlay : MonoBehaviour {
     }
 
 }
+
