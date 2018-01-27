@@ -40,8 +40,9 @@ public class GamePlay : MonoBehaviour {
     public float countdownTimer;
     private int score = 0;
 
-
-#region UI
+    //effects :
+    GameObject bloodEfx;
+    #region UI
     public Text txtScore;
     public Transform panelResult;
     public Text txtDebug;
@@ -98,15 +99,23 @@ public class GamePlay : MonoBehaviour {
         {
             case STATE.CountDown:
                 {
+                    //close effect
+                    if (bloodEfx)
+                        FBPoolManager.instance.returnObjectToPool(bloodEfx);
+
                     //UI
                     txtCountDown.gameObject.SetActive(true);
                     panelResult.gameObject.SetActive(false);
 
                     StartCoroutine(StartCountDown());
-                    break;
+
+                    //sound 
+                    SoundManager.instance.stopBgm();
+                    SoundManager.instance.playBgm("intro1", false);
+                        break;
                 }
             case STATE.Play:
-                {
+                {                    
                     //UI
                     txtCountDown.gameObject.SetActive(false);
                     txtScore.gameObject.SetActive(true);
@@ -116,15 +125,36 @@ public class GamePlay : MonoBehaviour {
                     //SHOW FULL-SCREEN CANVAS
                     player.GetComponent<Animator>().SetBool("Death_b", false);
                     player.transform.DOKill(true);
-                   
+
+                    //sound background
+                    SoundManager.instance.stopBgm();
+                    SoundManager.instance.playBgm("soundBgm1", true);
                     break;
                 }
             case STATE.GameOver:
                 {
+                    //effects 
+                    
+                    if (!bloodEfx)
+                        bloodEfx = FBPoolManager.instance.getPoolObject("BloodSprayEffect");
+                    else
+                    {
+                        FBPoolManager.instance.returnObjectToPool(bloodEfx);
+                        bloodEfx = FBPoolManager.instance.getPoolObject("BloodSprayEffect");
+                    }
+                    if (bloodEfx.transform.localScale.x > 10)
+                        bloodEfx.transform.localScale *= 0.1f;
+
+                    if (bloodEfx.transform.localScale.x > 10)
+                        bloodEfx.transform.localScale *= 0.1f;
+
+                    bloodEfx.SetActive(true);
+                    bloodEfx.transform.SetParent(player.transform);
+                    bloodEfx.transform.position = player.transform.position;
                     hardness = 0;
                     //UI
                     txtScore.gameObject.SetActive(true);
-
+                    
                     //SHOW GAMEOVER CANVAS
                     int highScore = PlayerPrefs.GetInt("highScore", 0);
                     if (score > highScore)
@@ -137,8 +167,10 @@ public class GamePlay : MonoBehaviour {
                     player.transform.DOKill(true);
                     Invoke("ShowResultPanel", 1f);
 
-                   
 
+                    //stop audio
+                    SoundManager.instance.stopBgm();
+                    SoundManager.instance.playBgm("loseSfx", true);
                     break;
                 }
         }
